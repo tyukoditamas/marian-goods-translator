@@ -29,7 +29,7 @@ jobs:
           python -m venv venv
           source venv/bin/activate
           pip install pdfplumber pyinstaller
-          pyinstaller --onefile python/extract.py --name extract
+          pyinstaller --onefile python/translate_excel.py --name translate_excel
           echo "artifact=extract" >> $GITHUB_OUTPUT
 
       - id: build-extractor-windows
@@ -40,8 +40,8 @@ jobs:
           python -m venv venv
           .\venv\Scripts\Activate.ps1
           pip install pdfplumber pyinstaller
-          pyinstaller --onefile python/extract.py --name extract.exe
-          echo "artifact=extract.exe" >> $GITHUB_OUTPUT
+          pyinstaller --onefile python/translate_excel.py --name translate_excel.exe
+          echo "artifact=translate_excel.exe" >> $GITHUB_OUTPUT
 
       - name: Upload extractor (macOS)
         if: runner.os != 'Windows'
