@@ -105,33 +105,17 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      # --- Pull in both binaries into resources ---
-      - name: Download extractor (macOS)
+      # --- Pull in *all* native binaries into the right folder ---
+      - name: Download native binaries (macOS)
         if: runner.os != 'Windows'
         uses: actions/download-artifact@v4
         with:
-          name: extractor-macos
           path: src/main/resources/native/macos
 
-      - name: Download extractor (Windows)
+      - name: Download native binaries (Windows)
         if: runner.os == 'Windows'
         uses: actions/download-artifact@v4
         with:
-          name: extractor-windows
-          path: src/main/resources/native/windows
-
-      - name: Download translator (macOS)
-        if: runner.os != 'Windows'
-        uses: actions/download-artifact@v4
-        with:
-          name: translator-macos
-          path: src/main/resources/native/macos
-
-      - name: Download translator (Windows)
-        if: runner.os == 'Windows'
-        uses: actions/download-artifact@v4
-        with:
-          name: translator-windows
           path: src/main/resources/native/windows
 
       - name: Set up Java 17
