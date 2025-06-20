@@ -95,5 +95,5 @@ jobs:
       - name: Upload installer artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: translator-app-${{ matrix.os == 'Windows' && 'windows' || 'macos' }}
+          name: translator-app-${{ runner.os == 'Windows' && 'windows' || 'macos' }}
           path: target/jpackage/**
