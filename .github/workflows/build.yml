@@ -1,4 +1,4 @@
-name: Build extractors & package native JARs
+name: Build translator & package native JARs
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  build-extractors:
+  build-translator:
     strategy:
       matrix:
         os: [ macos-latest, windows-latest ]
@@ -20,45 +20,7 @@ jobs:
         with:
           python-version: '3.x'
 
-      # --- PDF extractor build steps ---
-      - id: build-extractor-macos
-        if: runner.os != 'Windows'
-        name: Build extractor (macOS/Linux)
-        shell: bash
-        run: |
-          python -m venv venv
-          source venv/bin/activate
-          pip install pdfplumber pyinstaller
-          pyinstaller --onefile python/translate_excel.py --name translate_excel
-          echo "artifact=extract" >> $GITHUB_OUTPUT
-
-      - id: build-extractor-windows
-        if: runner.os == 'Windows'
-        name: Build extractor (Windows)
-        shell: pwsh
-        run: |
-          python -m venv venv
-          .\venv\Scripts\Activate.ps1
-          pip install pdfplumber pyinstaller
-          pyinstaller --onefile python/translate_excel.py --name translate_excel.exe
-          echo "artifact=translate_excel.exe" >> $GITHUB_OUTPUT
-
-      - name: Upload extractor (macOS)
-        if: runner.os != 'Windows'
-        uses: actions/upload-artifact@v4
-        with:
-          name: extractor-macos
-          path: dist/${{ steps.build-extractor-macos.outputs.artifact }}
-
-      - name: Upload extractor (Windows)
-        if: runner.os == 'Windows'
-        uses: actions/upload-artifact@v4
-        with:
-          name: extractor-windows
-          path: dist/${{ steps.build-extractor-windows.outputs.artifact }}
-
-
-      # --- Excel translator build steps ---
+      # macOS/Linux build
       - id: build-translator-macos
         if: runner.os != 'Windows'
         name: Build translator (macOS/Linux)
@@ -70,6 +32,7 @@ jobs:
           pyinstaller --onefile python/translate_excel.py --name translate_excel
           echo "artifact=translate_excel" >> $GITHUB_OUTPUT
 
+      # Windows build
       - id: build-translator-windows
         if: runner.os == 'Windows'
         name: Build translator (Windows)
@@ -81,6 +44,7 @@ jobs:
           pyinstaller --onefile python/translate_excel.py --name translate_excel.exe
           echo "artifact=translate_excel.exe" >> $GITHUB_OUTPUT
 
+      # upload
       - name: Upload translator (macOS)
         if: runner.os != 'Windows'
         uses: actions/upload-artifact@v4
@@ -95,9 +59,8 @@ jobs:
           name: translator-windows
           path: dist/${{ steps.build-translator-windows.outputs.artifact }}
 
-
   package:
-    needs: build-extractors
+    needs: build-translator
     strategy:
       matrix:
         os: [ macos-latest, windows-latest ]
@@ -105,17 +68,19 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      # --- Pull in *all* native binaries into the right folder ---
-      - name: Download native binaries (macOS)
+      # download exactly our translator binary
+      - name: Download translator (macOS)
         if: runner.os != 'Windows'
         uses: actions/download-artifact@v4
         with:
+          name: translator-macos
           path: src/main/resources/native/macos
 
-      - name: Download native binaries (Windows)
+      - name: Download translator (Windows)
         if: runner.os == 'Windows'
         uses: actions/download-artifact@v4
         with:
+          name: translator-windows
           path: src/main/resources/native/windows
 
       - name: Set up Java 17
@@ -130,5 +95,5 @@ jobs:
       - name: Upload installer artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: import-declaration-reader-plexus-tnt-${{ runner.os == 'Windows' && 'windows' || 'macos' }}
+          name: translator-app-${{ matrix.os == 'Windows' && 'windows' || 'macos' }}
           path: target/jpackage/**
